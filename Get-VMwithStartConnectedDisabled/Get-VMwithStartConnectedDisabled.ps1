@@ -37,9 +37,9 @@ Function Get-VMwithStartConnectedDisabled {
 					[pscustomobject]@{
 						VMName			=	$vm.name
 						VMHost			=	$vm.host
-						NetName	=	$netadapter.Name
-						NetNetwork	=	$netadapter.NetworkName
-						NetConnected =	$netadapter.ConnectionState.Connected
+						NetName			=	$netadapter.Name
+						NetNetwork		=	$netadapter.NetworkName
+						NetConnected 	=	$netadapter.ConnectionState.Connected
 						NetStartConnected =	$netadapter.ConnectionState.StartConnected
 					}
 				}
