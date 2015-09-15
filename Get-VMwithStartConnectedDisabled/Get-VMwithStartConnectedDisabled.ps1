@@ -48,5 +48,19 @@ Function Get-VMwithStartConnectedDisabled {
 	}
 }
 
-# get all the VMs (if already connected to vCenter) and check them
-# Get-VM | Get-VMwithStartConnectedDisabled
+# Get all the VMs (if already connected to vCenter) and check them
+#  Get-VM | Get-VMwithStartConnectedDisabled
+
+
+# Different ways of doing the same as before 
+
+#  Get-VM | Get-VMwithStartConnectedDisabled | ft
+
+#  $results = Get-VM | Get-VMwithStartConnectedDisabled
+#  $results | ft
+
+
+# Get VMs test1, test2, and test3 and check them
+#  $vms = Get-VM test1, test2, test3
+#  Get-VMwithStartConnectedDisabled -VMs $vms
+
