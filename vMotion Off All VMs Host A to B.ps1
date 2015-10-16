@@ -17,9 +17,8 @@ Get-VMHost -Name $srchostesx | Set-VMHost -State Maintenance
 #enter host maintenance - VSAN
 # Get-View -ViewType HostSystem -Filter @{"Name" = $srchostesx }|?{!$_.Runtime.InMaintenanceMode}|%{$_.EnterMaintenanceMode(0, $false, (new-object VMware.Vim.HostMaintenanceSpec -Property @{vsanMode=(new-object VMware.Vim.VsanHostDecommissionMode -Property @{objectAction=[VMware.Vim.VsanHostDecommissionModeObjectAction]::NoAction})}))}
 
-
 #
-# do my thang
+# do my thang ¯\_(ツ)_/¯
 #
 
 #exit host maintenance
