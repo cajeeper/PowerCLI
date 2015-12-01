@@ -3,7 +3,7 @@
   Function to trigger VMware Tools update on VMs.  
     
  .DESCRIPTION   
-  You can specify a single VM, multiple VMs, or discover all VMs in your environment and either trigger updates or view the results.  
+  You can specify a single VM, multiple VMs, or discover all VMs in your environment and either trigger updates or view the VM(s) found.  
     
  .NOTES   
   Author   : Justin Bennett   
