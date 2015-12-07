@@ -7,13 +7,29 @@
     
  .NOTES   
   Author   : Justin Bennett   
-  Date     : 2015-11-30  
+  Date     : 2015-12-07  
   Contact  : http://www.allthingstechie.net
-  Revision : v1  
+  Revision : v1.1
+  Changes  : v1.0 Original
+			 v1.1 Changed version dependency to build number of VMware tools
    
  .PARAMETER VM  
   Name of VM 
   or
+  VM Object from Get-VM
+
+ .PARAMETER MinimumBuildVersion
+  Minimum VMware Tools Build Number Desired
+  See https://packages.vmware.com/tools/versions for specific builds
+  
+ .PARAMETER Update
+  Run updates for VMware Tools without prompt
+
+ .PARAMETER UpdateAll
+  Run updates for all VMs VMware Tools without prompt  
+ 
+ .PARAMETER ViewOnly
+  View all VMs int out-grid without prompt  
   
  .EXAMPLE  
   C:\PS> #Update any VM
@@ -34,41 +50,53 @@
  .EXAMPLE  
   C:\PS> #Update Specific VMs
   C:\PS> Get-VM My-VM* | Update-VMwareTools
+  
+ .EXAMPLE  
+  C:\PS> #Update Cluster Specific VMs
+  C:\PS> Get-VMHost | ? { $_.Parent -match "My-Cluster1" } | Get-VM | Update-VMwareTools 
  #> 
 Function Update-VMwareTools {
      [CmdletBinding()]  
       param (  
-           [parameter(ValueFromPipeline=$True)] $VM
+           [parameter(Mandatory=$True,ValueFromPipeline=$True)] $VM,
+		   [parameter(Mandatory=$False)] [ValidateScript({$_ -ge 0})] [Int] $MinimumBuildVersion = 9541,
+		   [parameter(Mandatory=$False)] [boolean] $Update = $False,
+		   [parameter(Mandatory=$False)] [boolean] $UpdateAll = $False,
+		   [parameter(Mandatory=$False)] [boolean] $ViewOnly = $False
 		   )
-
   End {
  
     $list = @($input)
     $VM = if($list.Count) { $list } 
       elseif(!$VM) { @(get-vm) } 
       else { @($VM) }
- 
-	$curVer = "9.10.5"
-	
+
 	$allVMs = get-vm $VM
 	
-	$needTools = $allVMs | ? { $_.Guest.ToolsVersion -ne $curVer -and $_.PowerState -ne "PoweredOff" }
+	$needTools = $allVMs | ? { $_.Guest.ExtensionData.ToolsVersion -lt $MinimumBuildVersion -and $_.PowerState -ne "PoweredOff" }
 
-	$options = [System.Management.Automation.Host.ChoiceDescription[]] @("&Update VMs Running Tools", "Update &All VMs that Need Tools", "&View VMs", "&Quit")
-	$opt =  $host.UI.PromptForChoice("Proceed with updating VMware Tools?" , " Found VMs: $($allVMs.Count)`n  -Has Outdated Tools Running: $(($needTools | ? { $_.Guest.State -eq "Running"}).Count)`n  -Has No Tools Running: $(($needTools | ? { $_.Guest.State -eq "NotRunning"}).Count)" , $Options, [int]3)
+	if (!($Update) -and !($UpdateAll) -and !($ViewOnly)) {
+		$options = [System.Management.Automation.Host.ChoiceDescription[]] @("&Update VMs Running Tools", "Update &All VMs that Need Tools", "&View VMs", "&Quit")
+		$opt =  $host.UI.PromptForChoice("Proceed with updating VMware Tools?" , " Found VMs: $($allVMs.Count)`n  -Has Outdated Tools Running: $(($needTools | ? { $_.Guest.State -eq "Running"}).Count)`n  -Has No Tools Running: $(($needTools | ? { $_.Guest.State -eq "NotRunning"}).Count)" , $Options, [int]3)
+	} else { 
+		if($Update) { $opt = 0 }
+		if($UpdateAll) { $opt = 1 }
+		if($ViewOnly) { $opt = 2 }
+	}
 
 	switch($opt)
 	{
-	0 { Write-Host "Updating VMs Running Tools..." -ForegroundColor Green; Write-Host "Ctrl-C to cancel"; sleep 10; $needTools | ? { $_.Guest.State -eq "Running"} | % { Write-Host "Starting update for $($_.Name)"; try { $_ | Update-Tools -NoReboot } catch { Write-Host "Failed to update $($_)" }; } }
-	1 { Write-Host "Updating All VMs that Need Tools..." -ForegroundColor Green; Write-Host "Ctrl-C to cancel"; sleep 10; $needTools | % { Write-Host "Starting update for $($_.Name)"; try { $_ | Update-Tools -NoReboot } catch { Write-Host "Failed to update $($_)" }; }  }
+	0 { Write-Verbose "Updating VMs Running Tools..." -ForegroundColor Green; Write-Verbose "Ctrl-C to cancel"; sleep 10; $needTools | ? { $_.Guest.State -eq "Running"} | % { Write-Verbose "Starting update for $($_.Name)"; try { $_ | Update-Tools -NoReboot } catch { Write-Warning "Failed to update $($_)" }; } }
+	1 { Write-Verbose "Updating All VMs that Need Tools..." -ForegroundColor Green; Write-Verbose "Ctrl-C to cancel"; sleep 10; $needTools | % { Write-Verbose "Starting update for $($_.Name)"; try { $_ | Update-Tools -NoReboot } catch { Write-Warning "Failed to update $($_)" }; }  }
 	2 { $allVMs | % {
 		New-Object -TypeName PSCustomObject -Property ([ordered]@{
 			Name= $_.Name
 			Host= $_.Host
 			ToolState= $_.Guest.State
-			ToolVersion= $_.Guest.ToolsVersion
+			ToolVersion= $_.Guest.ExtensionData.ToolsVersion
 			GuestOS = $_.Guest.OSFullName
-		}) } | Out-GridView -Title "All VMs"
+			NeedUpgrade= if ($_.Guest.ExtensionData.ToolsVersion -lt $MinimumBuildVersion) { $True } else { $false }
+		}) } | Out-GridView -Title "All VMs - Minimum VMware Tools Build Version $($MinimumBuildVersion)"
 		
 	}	
 	default {}
