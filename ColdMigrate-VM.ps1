@@ -17,7 +17,7 @@
 #>
 
 $vmName = "My-VM1"
-$ip = "192.168.01"
+$ip = "192.168.0.1"
 $dstDatastore = Get-Datastore MyDatastore
 $dstIP = "MyESXiHost"
 
