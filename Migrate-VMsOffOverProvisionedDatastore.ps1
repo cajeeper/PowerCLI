@@ -16,7 +16,7 @@ $myDatastore = get-datastore myDatastoreLun
 $myDatastoreVMs = $myDatastore | get-vm
 
 #Migration Destination
-$dstDatastore = Get-Datastore MyDatastore
+$dstDatastore = Get-Datastore myDatastoreDest
 $dstIP = "MyESXiHost"
 
 #Gather Sizes - Size and Provisioned Size
