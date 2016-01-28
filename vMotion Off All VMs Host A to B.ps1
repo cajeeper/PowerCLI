@@ -1,3 +1,22 @@
+<#  
+ .SYNOPSIS  
+  Script to vMotion VMs off one ESXi host to do maintenance - non-DRS user.
+    
+ .DESCRIPTION
+  I use this script to vMotion VMs off one ESXi host to another ESXi host (A to B),
+  perform some maintenance on the host, then migrate the VMs back to host (B to A).
+  Optional progress bar, unmounting of ISO files (sometimes causes issues),
+  and maintenance mode for standard vs. Virtual SAN nodes.
+ 
+ .NOTES   
+  Author   : Justin Bennett   
+  Date     : 2016-01-28
+  Contact  : http://www.allthingstechie.net
+  Revision : v1.0
+  Changes  : v1.0 Original
+			 v1.1 Added Progress Bar and Notes
+#>
+
 #Show Progress
 $showProgress = $true
 #maintenance host
