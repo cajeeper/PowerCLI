@@ -1,3 +1,5 @@
+#Show Progress
+$showProgress = $true
 #maintenance host
 $srchostesx = "esxA.domain.local"
 #temp VM host
@@ -10,7 +12,14 @@ $vms = get-vm | ? { $_.vmhost -like $srchostesx }
 # $vms | % { get-vm -name $_.name | Get-CDDrive  } | ? { $_.IsoPath -like "*.iso" -OR $_.HostDevice -match "/" } | % { $_ | Set-CDDrive -NoMedia -Confirm:$false }
 
 #move VMs off
-foreach($vm in $vms) { Move-VM $vm -Destination $dsthostesx -VMotionPriority High; sleep 10; }
+if ($vms.Count -gt 0) { $vms | % {$i=0} { 
+	$i++
+	if($showProgress) { Write-Progress -Activity "vMotion Off All VMs: $($srchostesx) to $($dsthostesx)" -Status "$($i)/$($vms.Count): VM:$($_.Name) - Attempting to vMotion to $($dsthostesx)..." -PercentComplete (($i/$vms.Count)*100) }
+	Move-VM $_ -Destination $dsthostesx -VMotionPriority High
+	if($showProgress) { Write-Progress -Activity "vMotion Off All VMs: $($srchostesx) to $($dsthostesx)" -Status "$($i)/$($vms.Count): VM:$($_.Name) - Pausing 10 seconds..." -PercentComplete (($i/$vms.Count)*100) }
+	sleep 10
+	}
+}
 
 #enter host maintenance 
 Get-VMHost -Name $srchostesx | Set-VMHost -State Maintenance
@@ -25,4 +34,11 @@ Get-VMHost -Name $srchostesx | Set-VMHost -State Maintenance
 Get-VMHost -name $srchostesx | Set-VMHost -State Connected
 
 #move VMs back
-foreach($vm in $vms) { Move-VM $vm -Destination $srchostesx -VMotionPriority High; sleep 10; }
+if ($vms.Count -gt 0) { $vms | % {$i=0} { 
+	$i++
+	if($showProgress) { Write-Progress -Activity "vMotion Off All VMs: $($dsthostesx) to $($srchostesx)" -Status "$($i)/$($vms.Count): VM:$($_.Name) - Attempting to vMotion to $($srchostesx)..." -PercentComplete (($i/$vms.Count)*100) }
+	Move-VM $_ -Destination $srchostesx -VMotionPriority High
+	if($showProgress) { Write-Progress -Activity "vMotion Off All VMs: $($dsthostesx) to $($srchostesx)" -Status "$($i)/$($vms.Count): VM:$($_.Name) - Pausing 10 seconds..." -PercentComplete (($i/$vms.Count)*100) }
+	sleep 10
+	}
+}
