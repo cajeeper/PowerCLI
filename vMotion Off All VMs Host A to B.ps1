@@ -6,7 +6,7 @@
   I use this script to vMotion VMs off one ESXi host to another ESXi host (A to B),
   perform some maintenance on the host, then migrate the VMs back to host (B to A).
   Optional progress bar, unmounting of ISO files (sometimes causes issues),
-  and maintenance mode for standard vs. Virtual SAN nodes.
+  and maintenance mode for standard vs. Virtual SAN hosts.
  
  .NOTES   
   Author   : Justin Bennett   
@@ -16,6 +16,7 @@
   Changes  : v1.0 Original
 			 v1.1 Added Progress Bar and Notes
 #>
+#Connect-VIServer myvCenterServer.local
 
 #Show Progress
 $showProgress = $true
