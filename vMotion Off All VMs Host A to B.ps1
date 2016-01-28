@@ -12,7 +12,7 @@
   Author   : Justin Bennett   
   Date     : 2016-01-28
   Contact  : http://www.allthingstechie.net
-  Revision : v1.0
+  Revision : v1.1
   Changes  : v1.0 Original
 			 v1.1 Added Progress Bar and Notes
 #>
