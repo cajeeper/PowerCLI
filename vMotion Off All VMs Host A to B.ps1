@@ -26,7 +26,7 @@ $srchostesx = "esxA.domain.local"
 $dsthostesx = "esxB.domain.local"
 
 #VMs to be migrated around
-$VMs = get-vm | ? { $_.vmhost -like $srchostesx }
+$VMs = Get-VM | ? { $_.VMHost -like $srchostesx }
 
 #disconenct any ISOs as needed
 # $VMs | % { get-vm -name $_.name | Get-CDDrive  } | ? { $_.IsoPath -like "*.iso" -OR $_.HostDevice -match "/" } | % { $_ | Set-CDDrive -NoMedia -Confirm:$false }
