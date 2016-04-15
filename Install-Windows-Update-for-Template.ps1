@@ -50,13 +50,10 @@ try {
 	[void]$log.appendline("Converting Template: $($name) to VM")
 	$template | Set-Template -ToVM -Confirm:$false
 
-	#Get VM
-	$vm = get-vm $name
-
 	#Start VM
 	if($showProgress) { Write-Progress -Activity "Update Template" -Status "Starting VM: $($name)" -PercentComplete 20 }
 	[void]$log.appendline("Starting VM: $($name)")
-	$vm | Start-VM -RunAsync:$RunAsync
+	get-vm $name | Start-VM -RunAsync:$RunAsync
 
 	#Wait for VMware Tools to start
 	if($showProgress) { Write-Progress -Activity "Update Template" -Status "Giving VM: $($name) 30 seconds to start VMwareTools" -PercentComplete 35 }
@@ -101,7 +98,7 @@ try {
 	#Running Script on Guest VM
 	if($showProgress) { Write-Progress -Activity "Update Template" -Status "Running Script on Guest VM: $($name)" -PercentComplete 50 }
 	[void]$log.appendline("Running Script on Guest VM: $($name)")
-	$vm | Invoke-VMScript -ScriptText $script -GuestCredential $cred
+	get-vm $name | Invoke-VMScript -ScriptText $script -GuestCredential $cred
 	
 	#Wait for Windows Updates to finish after reboot
 	if($showProgress) { Write-Progress -Activity "Update Template" -Status "Giving VM: $($name) 600 seconds to finish rebooting after Windows Update" -PercentComplete 65 }
@@ -111,12 +108,17 @@ try {
 	#Shutdown the VM
 	if($showProgress) { Write-Progress -Activity "Update Template" -Status "Shutting Down VM: $($name)" -PercentComplete 80 }
 	[void]$log.appendline("Shutting Down VM: $($name)")
-	$vm | Stop-VMGuest -Confirm:$false
+	get-vm $name | Stop-VMGuest -Confirm:$false
 
+	#Wait for shutdown to finish
+	if($showProgress) { Write-Progress -Activity "Update Template" -Status "Giving VM: $($name) 30 seconds to finish Shutting Down" -PercentComplete 90 }
+	[void]$log.appendline("Giving VM: $($name) 30 seconds to finish Shutting Down")
+	sleep 30
+	
 	#Convert VM back to Template
-	if($showProgress) { Write-Progress -Activity "Update Template" -Status "Convert VM: $($name) back to template" -PercentComplete 95 }
+	if($showProgress) { Write-Progress -Activity "Update Template" -Status "Convert VM: $($name) back to template" -PercentComplete 100 }
 	[void]$log.appendline("Convert VM: $($name) back to template")
-	$vm | Set-VM -ToTemplate -Confirm:$false
+	get-vm $name | Set-VM -ToTemplate -Confirm:$false
 }
 catch { 
 	[void]$log.appendline("Error:")
