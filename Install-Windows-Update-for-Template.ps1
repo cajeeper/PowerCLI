@@ -16,6 +16,8 @@
 			 v1.1 Add Logging
 
 #>
+#Connect-VIServer myvCenterServer.local
+
 #Show Progress
 $showProgress = $true
 
