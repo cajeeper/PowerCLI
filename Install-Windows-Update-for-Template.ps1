@@ -36,7 +36,7 @@ $log = New-Object -TypeName "System.Text.StringBuilder" "";
 
 function writeLog {
 	$exist = Test-Path $logRoot\update-$name.log
-	$logFile = New-Object System.IO.StreamWriter("$logRoot\update-$($name).log)", $exist)
+	$logFile = New-Object System.IO.StreamWriter("$logRoot\update-$($name).log", $exist)
 	$logFile.write($log)
 	$logFile.close()
 }
