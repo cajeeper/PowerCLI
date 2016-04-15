@@ -16,7 +16,7 @@
 			 v1.1 Add Logging
 
 #>
-#. "C:\Program Files (x86)\VMware\Infrastructure\vSphere PowerCLI\Scripts\Initialize-PowerCLIEnvironment.ps1"
+#add-pssnapin VMware.VimAutomation.Core
 
 #Connect-VIServer myvCenterServer.local
 
