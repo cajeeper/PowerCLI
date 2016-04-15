@@ -122,6 +122,6 @@ catch {
 	Write-Error $error
 	}
 
-[void]$log.appendline((("[Start Batch - ")+(get-date)+("]")))
+[void]$log.appendline((("[End Batch - ")+(get-date)+("]")))
 
 writeLog
