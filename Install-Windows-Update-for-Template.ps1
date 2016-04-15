@@ -20,6 +20,9 @@ $showProgress = $true
 
 #Template/VM Name
 $name = "Windows Server 2012 R2 Datacenter"
+#Template/VM Local Account to Run Script
+$user = "Administrator"
+$pass = ConvertTo-SecureString 'SomePassword' -AsPlainText -Force
 
 try {
 	#Get Template
@@ -40,9 +43,7 @@ try {
 	if($showProgress) { Write-Progress -Activity "Update Template" -Status "Giving VM: $($name) 30 seconds to start VMwareTools" -PercentComplete 35 }
 	sleep 30
 
-	#VM Local Administrator Credentials
-	$user = "Administrator"
-	$pass = ConvertTo-SecureString 'SomePassword' -AsPlainText -Force
+	#VM Local Account Credentials for Script
 	$cred = New-Object System.Management.Automation.PSCredential $user, $pass
 
 	#Script to run on VM
