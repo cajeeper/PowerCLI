@@ -169,18 +169,18 @@ if($copyTemplate -and !($updateError)) {
 		get-template | ? {$_.Name -eq $copyTempName} | % {
 			if($showProgress) { Write-Progress -Activity "Copy Template" -Status "Remove Existing Template: $($copyTempName)" -PercentComplete 30 }
 			[void]$log.appendline("Remove Existing Template: $($copyTempName)")
-			Get-Template "$($copyTempName)" | Remove-Template -DeletePermanently -Confirm:$false
+			Get-Template $copyTempName | Remove-Template -DeletePermanently -Confirm:$false
 		}
 
 		#Copy Template
 		if($showProgress) { Write-Progress -Activity "Copy Template" -Status "Create new VM (Template): Copy Template Source: $($copyTempSource) to New VM: $($copyTempName)" -PercentComplete 60 }
 		[void]$log.appendline("Create new VM (Template): Copy Template Source: $($copyTempSource) to New VM: $($copyTempName)")
-		New-VM -Name "$($copyTempName)" -Template $copyTempSource -VMHost $copyTempESXHost -Datastore $copyTempDatastore -Location $copyTempLocation
+		New-VM -Name $copyTempName -Template $copyTempSource -VMHost $copyTempESXHost -Datastore $copyTempDatastore -Location $copyTempLocation
 
 		#Change VM to Template
 		if($showProgress) { Write-Progress -Activity "Copy Template" -Status "Change new VM to Template: $($copyTempName)" -PercentComplete 90 }
 		[void]$log.appendline("Change new VM to Template: $($copyTempName)")
-		Get-VM "$($copyTempName)" | Set-VM -ToTemplate -Confirm:$false
+		Get-VM $copyTempName | Set-VM -ToTemplate -Confirm:$false
 		
 	} catch { 
 		[void]$log.appendline("Error:")
