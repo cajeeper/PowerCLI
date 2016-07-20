@@ -151,6 +151,8 @@ catch {
 	[void]$log.appendline("Error:")
 	[void]$log.appendline($error)
 	Write-Error $error
+	#stops post-update copy of template
+	$updateError = $true
 	}
 #---------------------
 #End of Update Template
@@ -161,7 +163,7 @@ catch {
 #Copy Template
 #---------------------
 
-if($copyTemplate) {
+if($copyTemplate -and !($updateError)) {
 	try {
 		#Remove Existing Template if exists
 		get-template | ? {$_.Name -eq $copyTempName} | % {
