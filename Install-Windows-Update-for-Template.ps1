@@ -6,7 +6,8 @@
   I use this script to convert my template to a VM, start the VM,
   apply any Windows Update, shutdown the VM, and convert it back
   to a template.
-  Optionally, it can create a copy of the template to another site to maintain
+  Optionally, it can create a copy of the template to another site
+  to maintain a duplicate copy of the template.
  
  .NOTES   
   Author   : Justin Bennett   
@@ -70,7 +71,7 @@ function writeLog {
 
 try {
 	#Get Template
-	$template = get-template $updateTempName
+	$template = Get-Template $updateTempName
 
 	#Convert Template to VM
 	if($showProgress) { Write-Progress -Activity "Update Template" -Status "Converting Template: $($updateTempName) to VM" -PercentComplete 5 }
@@ -80,7 +81,7 @@ try {
 	#Start VM
 	if($showProgress) { Write-Progress -Activity "Update Template" -Status "Starting VM: $($updateTempName)" -PercentComplete 20 }
 	[void]$log.appendline("Starting VM: $($updateTempName)")
-	get-vm $updateTempName | Start-VM -RunAsync:$RunAsync
+	Get-VM $updateTempName | Start-VM -RunAsync:$RunAsync
 
 	#Wait for VMware Tools to start
 	if($showProgress) { Write-Progress -Activity "Update Template" -Status "Giving VM: $($updateTempName) 30 seconds to start VMwareTools" -PercentComplete 35 }
@@ -125,7 +126,7 @@ try {
 	#Running Script on Guest VM
 	if($showProgress) { Write-Progress -Activity "Update Template" -Status "Running Script on Guest VM: $($updateTempName)" -PercentComplete 50 }
 	[void]$log.appendline("Running Script on Guest VM: $($updateTempName)")
-	get-vm $updateTempName | Invoke-VMScript -ScriptText $script -GuestCredential $cred
+	Get-VM $updateTempName | Invoke-VMScript -ScriptText $script -GuestCredential $cred
 	
 	#Wait for Windows Updates to finish after reboot
 	if($showProgress) { Write-Progress -Activity "Update Template" -Status "Giving VM: $($updateTempName) 600 seconds to finish rebooting after Windows Update" -PercentComplete 65 }
@@ -135,7 +136,7 @@ try {
 	#Shutdown the VM
 	if($showProgress) { Write-Progress -Activity "Update Template" -Status "Shutting Down VM: $($updateTempName)" -PercentComplete 80 }
 	[void]$log.appendline("Shutting Down VM: $($updateTempName)")
-	get-vm $updateTempName | Stop-VMGuest -Confirm:$false
+	Get-VM $updateTempName | Stop-VMGuest -Confirm:$false
 
 	#Wait for shutdown to finish
 	if($showProgress) { Write-Progress -Activity "Update Template" -Status "Giving VM: $($updateTempName) 30 seconds to finish Shutting Down" -PercentComplete 90 }
@@ -145,12 +146,14 @@ try {
 	#Convert VM back to Template
 	if($showProgress) { Write-Progress -Activity "Update Template" -Status "Convert VM: $($updateTempName) back to template" -PercentComplete 100 }
 	[void]$log.appendline("Convert VM: $($updateTempName) back to template")
-	get-vm $updateTempName | Set-VM -ToTemplate -Confirm:$false
+	Get-VM $updateTempName | Set-VM -ToTemplate -Confirm:$false
 }
 catch { 
 	[void]$log.appendline("Error:")
 	[void]$log.appendline($error)
 	Write-Error $error
+	#stops post-update copy of template
+	$updateError = $true
 	}
 #---------------------
 #End of Update Template
@@ -161,10 +164,10 @@ catch {
 #Copy Template
 #---------------------
 
-if($copyTemplate) {
+if($copyTemplate -and !($updateError)) {
 	try {
 		#Remove Existing Template if exists
-		get-template | ? {$_.Name -eq $copyTempName} | % {
+		Get-Template | ? {$_.Name -eq $copyTempName} | % {
 			if($showProgress) { Write-Progress -Activity "Copy Template" -Status "Remove Existing Template: $($copyTempName)" -PercentComplete 30 }
 			[void]$log.appendline("Remove Existing Template: $($copyTempName)")
 			Get-Template $copyTempName | Remove-Template -DeletePermanently -Confirm:$false
