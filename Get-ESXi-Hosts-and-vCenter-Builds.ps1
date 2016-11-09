@@ -5,7 +5,11 @@ $myESXiHosts = Get-VMHost | %{ $_ | Select Name,
       $global:DefaultVIServers | 
       where {$_.Name -eq ($_.ExtensionData.Client.ServiceUrl.Split('/')[2])} | 
       %{"$($_.Version) build $($_.Build)"}
-    }}
+    }},
+	@{N="Make";E={(Get-EsxCli -VMHost $_.Name).hardware.platform.get().VendorName}},
+	@{N="Model";E={(Get-EsxCli -VMHost $_.Name).hardware.platform.get().ProductName}},
+	@{N="Serial";E={(Get-EsxCli -VMHost $_.Name).hardware.platform.get().SerialNumber}}
+	
 }
 
 $myESXiHosts
