@@ -13,10 +13,11 @@
   Author   : Justin Bennett   
   Date     : 2016-07-20
   Contact  : http://www.allthingstechie.net
-  Revision : v1.2
+  Revision : v1.3
   Changes  : v1.0 Original
 			 v1.1 Added Logging, 2016-04-15
 			 v1.2 Added template copy to post update, 2016-07-20
+			 v1.3 Replaced write-error with throw - 2017-01-26
 
 #>
 #add-pssnapin VMware.VimAutomation.Core
@@ -151,7 +152,7 @@ try {
 catch { 
 	[void]$log.appendline("Error:")
 	[void]$log.appendline($error)
-	Write-Error $error
+	Throw $error
 	#stops post-update copy of template
 	$updateError = $true
 	}
@@ -186,7 +187,7 @@ if($copyTemplate -and !($updateError)) {
 	} catch { 
 		[void]$log.appendline("Error:")
 		[void]$log.appendline($error)
-		Write-Error $error
+		Throw $error
 	}
 }
 #---------------------
