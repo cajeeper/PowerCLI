@@ -8,16 +8,19 @@
   to a template.
   Optionally, it can create a copy of the template to another site
   to maintain a duplicate copy of the template.
+  Tested with: Windows Server 2012 R2 Datacenter, and Windows Server
+  2016 Datacenter VMs.
  
  .NOTES   
   Author   : Justin Bennett   
-  Date     : 2016-07-20
+  Date     : 2017-06-13
   Contact  : http://www.allthingstechie.net
-  Revision : v1.3
+  Revision : v1.3a
   Changes  : v1.0 Original
 			 v1.1 Added Logging, 2016-04-15
 			 v1.2 Added template copy to post update, 2016-07-20
 			 v1.3 Replaced write-error with throw - 2017-01-26
+			 v1.3a Added testing notes to description - 2017-06-13
 
 #>
 #add-pssnapin VMware.VimAutomation.Core
