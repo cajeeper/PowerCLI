@@ -1,30 +1,22 @@
 <#  
  .SYNOPSIS  
-  Script to update Template's Windows Updates
+  Script to update Template's Linux Updates and copy template - CentOS / Redhat
     
  .DESCRIPTION
   I use this script to convert my template to a VM, start the VM,
-  apply any Windows Update, shutdown the VM, and convert it back
+  apply any Linux Update, shutdown the VM, and convert it back
   to a template.
   Optionally, it can create a copy of the template to another site
   to maintain a duplicate copy of the template.
-  Tested with: Windows Server 2012 R2 Datacenter, and Windows Server
-  2016 Datacenter VMs.
  
  .NOTES   
   Author   : Justin Bennett   
-  Date     : 2017-06-13
+  Date     : 2017-07-03
   Contact  : http://www.allthingstechie.net
-  Revision : v1.4
+  Revision : v1.0
   Changes  : v1.0 Original
-			 v1.1 Added Logging, 2016-04-15
-			 v1.2 Added template copy to post update, 2016-07-20
-			 v1.3 Replaced write-error with throw - 2017-01-26
-			 v1.3a Added testing notes to description - 2017-06-13
-			 v1.4 Copy template if doesn't exist
-
 #>
-#add-pssnapin VMware.VimAutomation.Core
+add-pssnapin VMware.VimAutomation.Core
 
 #Connect-VIServer myvCenterServer.local
 
@@ -35,10 +27,10 @@ $showProgress = $true
 #Update Template Parameters
 
 	#Update Template Name
-	$updateTempName = "Windows Server 2012 R2 Datacenter"
+	$updateTempName = "CentOS-7-x86_64-Minimal-1611"
 
 	#Update Template Local Account to Run Script
-	$updateTempUser = "Administrator"
+	$updateTempUser = "root"
 	$updateTempPass = ConvertTo-SecureString 'SomePassword' -AsPlainText -Force
 
 
@@ -56,7 +48,7 @@ $showProgress = $true
 
 
 #Log Parameters and Write Log Function
-$logRoot = "C:\Scripts\Install Windows Updates for Templates\logs"
+$logRoot = "C:\Scripts\Install Linux Updates for Templates\logs"
 
 $log = New-Object -TypeName "System.Text.StringBuilder" "";
 
@@ -96,48 +88,33 @@ try {
 	#VM Local Account Credentials for Script
 	$cred = New-Object System.Management.Automation.PSCredential $updateTempUser, $updateTempPass
 
-	#Script to run on VM
-	$script = "Function WSUSUpdate {
-		  param ( [switch]`$rebootIfNecessary,
-				  [switch]`$forceReboot)  
-		`$Criteria = ""IsInstalled=0 and Type='Software'""
-		`$Searcher = New-Object -ComObject Microsoft.Update.Searcher
-		try {
-			`$SearchResult = `$Searcher.Search(`$Criteria).Updates
-			if (`$SearchResult.Count -eq 0) {
-				Write-Output ""There are no applicable updates.""
-				exit
-			} 
-			else {
-				`$Session = New-Object -ComObject Microsoft.Update.Session
-				`$Downloader = `$Session.CreateUpdateDownloader()
-				`$Downloader.Updates = `$SearchResult
-				`$Downloader.Download()
-				`$Installer = New-Object -ComObject Microsoft.Update.Installer
-				`$Installer.Updates = `$SearchResult
-				`$Result = `$Installer.Install()
-			}
-		}
-		catch {
-			Write-Output ""There are no applicable updates.""
-		}
-		If(`$rebootIfNecessary.IsPresent) { If (`$Result.rebootRequired) { Restart-Computer -Force} }
-		If(`$forceReboot.IsPresent) { Restart-Computer -Force }
-	}
+	#Script to run on VM and replace `r`n with `n
+	$script = @'
+cat /etc/redhat-release
+uname -r
+yum clean all
+yum update -y
+'@ -replace "`r`n?","`n"
 
-	WSUSUpdate -rebootIfNecessary
-	"
-	
 	#Running Script on Guest VM
 	if($showProgress) { Write-Progress -Activity "Update Template" -Status "Running Script on Guest VM: $($updateTempName)" -PercentComplete 50 }
 	[void]$log.appendline("Running Script on Guest VM: $($updateTempName)")
-	Get-VM $updateTempName | Invoke-VMScript -ScriptText $script -GuestCredential $cred
+	$output = Get-VM $updateTempName | Invoke-VMScript -ScriptText $script -GuestCredential $cred -ScriptType bash
 	
-	#Wait for Windows Updates to finish after reboot
-	if($showProgress) { Write-Progress -Activity "Update Template" -Status "Giving VM: $($updateTempName) 600 seconds to finish rebooting after Windows Update" -PercentComplete 65 }
-	[void]$log.appendline("Giving VM: $($updateTempName) 600 seconds to finish rebooting after Windows Update")
-	sleep 600
-
+	$updatesFound = $output -notmatch "No packages marked for update" -and $output.exitcode -eq 0
+	$updateError = !($updatesFound)
+	
+	if($updatesFound) {
+		if($showProgress) { Write-Progress -Activity "Update Template" -Status "Giving VM: $($updateTempName) Linux Updates Loaded" -PercentComplete 65 }
+		[void]$log.appendline("Giving VM: $($updateTempName) Linux Updates Loaded")
+		[void]$log.appendline($output)
+	}
+	else {
+		if($showProgress) { Write-Progress -Activity "Update Template" -Status "Giving VM: $($updateTempName) No Updates found. Stopping process" -PercentComplete 65 }
+		[void]$log.appendline("Giving VM: $($updateTempName) No Updates found. Stopping process")
+		[void]$log.appendline($output)
+	}
+	
 	#Shutdown the VM
 	if($showProgress) { Write-Progress -Activity "Update Template" -Status "Shutting Down VM: $($updateTempName)" -PercentComplete 80 }
 	[void]$log.appendline("Shutting Down VM: $($updateTempName)")
@@ -156,6 +133,7 @@ try {
 catch { 
 	[void]$log.appendline("Error:")
 	[void]$log.appendline($error)
+	[void]$log.appendline($output)
 	Throw $error
 	#stops post-update copy of template
 	$updateError = $true
@@ -170,7 +148,7 @@ catch {
 #---------------------
 
 #Copy if copyTemplate true and either updateError false or no existing template
-if($copyTemplate -and (!($updateError) -or ((Get-Template | ? {$_.Name -eq $copyTempName}).count -eq 0))) {
+if($copyTemplate -and (!($updateError) -or ((Get-Template | ? {$_.Name -eq $copyTempName}).count -eq 0)))
 	try {
 		#Remove Existing Template if exists
 		Get-Template | ? {$_.Name -eq $copyTempName} | % {
